@@ -147,6 +147,7 @@ async function openContainer(recreate: boolean = false) {
   //
   // TODO: show message to users or log the script's output into the output channel
   await installCodeServer(devpodHost, installExtArgs);
+  vscode.window.showInformationMessage(`Installed Code Server`);
 
   redirectToDevpod(devpod.id);
 }

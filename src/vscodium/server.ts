@@ -7,6 +7,7 @@
 
 import * as crypto from 'crypto';
 import { spawnSync } from 'child_process';
+import spawnShell, { isWindows } from "../shell";
 
 export interface ServerInstallOptions {
     id: string;
@@ -51,7 +52,7 @@ export async function installCodeServer(devpodAddr: string, extensionIds: string
 
     // detect plaform and shell for windows
     if (!platform || platform === 'windows') {
-        const result = spawnSync(`ssh ${devpodAddr} -- uname -s`);
+        const result = spawnSync(`ssh ${devpodAddr} -- uname -s`, { shell: spawnShell });
 
         if (result.stdout) {
             if (result.stdout.includes('windows32')) {
@@ -130,7 +131,7 @@ export async function installCodeServer(devpodAddr: string, extensionIds: string
             throw new ServerInstallError(`Not supported shell: ${shell}`);
         }
 
-        const out = spawnSync(command);
+        const out = spawnSync(command, { shell: spawnShell });
         commandOutput = {
             stdout: out.stdout.toString(),
             stderr: out.stderr.toString(),
@@ -141,7 +142,7 @@ export async function installCodeServer(devpodAddr: string, extensionIds: string
         // Fish shell does not support heredoc so let's workaround it using -c option,
         // also replace single quotes (') within the script with ('\'') as there's no quoting within single quotes, see https://unix.stackexchange.com/a/24676
         // const out = spawnSync(`ssh ${devpodAddr} -- bash -c '${installServerScript.replace(/'/g, `'\\''`)}'`);
-        const out = spawnSync('ssh', [devpodAddr, '--', 'bash', '-c', `'${installServerScript.replace(/'/g, `'\\''`)}'`]);
+        const out = spawnSync('ssh', [devpodAddr, '--', 'bash', '-c', `'${installServerScript.replace(/'/g, isWindows ? `''` : `'\\''`)}'`], { shell: spawnShell });
         commandOutput = {
             stdout: out.stdout.toString(),
             stderr: out.stderr.toString(),

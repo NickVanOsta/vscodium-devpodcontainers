@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { spawn, spawnSync } from "child_process";
 import { buildDevPodCommand } from "./bin";
+import shell from "../shell";
 
 export async function upDevpod(args: {
   configPath: string;
@@ -25,7 +26,7 @@ export async function upDevpod(args: {
 
     let devPodCommand = buildDevPodCommand(cmdArgs);
 
-    const cp = spawn(devPodCommand.command, devPodCommand.args);
+    const cp = spawn(devPodCommand.command, devPodCommand.args, { shell });
     cp.stdout.on("data", data => {
       cliOutput.append(data.toString());
     });
@@ -54,7 +55,7 @@ export async function listDevpods() {
   let devPodCommand = buildDevPodCommand(["list", "--output", "json"]);
 
   return new Promise<Devpod[]>((resolve, reject) => {
-    const cp = spawn(devPodCommand.command, devPodCommand.args);
+    const cp = spawn(devPodCommand.command, devPodCommand.args, { shell });
     let stdout = "";
     cp.stdout.on("data", data => {
       stdout += data;
@@ -72,7 +73,7 @@ export async function listDevpods() {
 
 // a dirty hack until I find a better solution.
 export function findWorkDir(devpodHost: string) {
-  const output = spawnSync("ssh", [devpodHost, "--", "pwd"]);
+  const output = spawnSync("ssh", [devpodHost, "--", "pwd"], { shell });
   if (output.stdout) {
     return output.stdout.toString("utf-8").trim();
   }
